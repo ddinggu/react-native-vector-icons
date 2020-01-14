@@ -54,51 +54,47 @@ public class VectorIconsModule extends ReactContextBaseJavaModule {
     String cacheFileUrl = "file://" + cacheFilePath;
     File cacheFile = new File(cacheFilePath);
 
-    if(cacheFile.exists()) {
+    // if(cacheFile.exists()) {
+    FileOutputStream fos = null;
+    Typeface typeface = ReactFontManager.getInstance().getTypeface(fontFamily, 0, context.getAssets());
+    Paint paint = new Paint();
+    paint.setTypeface(typeface);
+    paint.setColor(color);
+    paint.setTextSize(size);
+    paint.setAntiAlias(true);
+    Rect textBounds = new Rect();
+    paint.getTextBounds(glyph, 0, glyph.length(), textBounds);
+
+    int offsetX = 0;
+    int offsetY = size - (int) paint.getFontMetrics().bottom;
+
+    Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+    Canvas canvas = new Canvas(bitmap);
+    canvas.drawText(glyph, offsetX, offsetY, paint);
+
+    try {
+      fos = new FileOutputStream(cacheFile);
+      bitmap.compress(CompressFormat.PNG, 100, fos);
+      fos.flush();
+      fos.close();
+      fos = null;
+
       callback.invoke(null, cacheFileUrl);
-    } else {
-      FileOutputStream fos = null;
-      Typeface typeface = ReactFontManager.getInstance().getTypeface(fontFamily, 0, context.getAssets());
-      Paint paint = new Paint();
-      paint.setTypeface(typeface);
-      paint.setColor(color);
-      paint.setTextSize(size);
-      paint.setAntiAlias(true);
-      Rect textBounds = new Rect();
-      paint.getTextBounds(glyph, 0, glyph.length(), textBounds);
-
-      int offsetX = 0;
-      int offsetY = size - (int) paint.getFontMetrics().bottom;
-
-      Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
-      Canvas canvas = new Canvas(bitmap);
-      canvas.drawText(glyph, offsetX, offsetY, paint);
-
-      try {
-        fos = new FileOutputStream(cacheFile);
-        bitmap.compress(CompressFormat.PNG, 100, fos);
-        fos.flush();
-        fos.close();
-        fos = null;
-
-        callback.invoke(null, cacheFileUrl);
-      } catch (FileNotFoundException e) {
-        callback.invoke(e.getMessage());
-      } catch (IOException e) {
-        callback.invoke(e.getMessage());
-      }
-      finally {
-        if (fos != null) {
-          try {
-            fos.close();
-            fos = null;
-          }
-          catch (IOException e) {
-            e.printStackTrace();
-          }
+    } catch (FileNotFoundException e) {
+      callback.invoke(e.getMessage());
+    } catch (IOException e) {
+      callback.invoke(e.getMessage());
+    }
+    finally {
+      if (fos != null) {
+        try {
+          fos.close();
+          fos = null;
+        }
+        catch (IOException e) {
+          e.printStackTrace();
         }
       }
     }
   }
-
 }
